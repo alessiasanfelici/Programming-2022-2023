@@ -20,6 +20,8 @@ for col in null_col:
     music_health_df.drop(music_health_df[music_health_df[col].isnull()].index, inplace = True)
 music_health_df["Age"].fillna(round(music_health_df["Age"].mean()), inplace = True) #I replace the remaining missing value in the column "Age" with the mean of this column(rounded)
 
+backup_dataset2 = music_health_df.copy()
+
 for i in music_health_df.columns[7:23]:
   music_health_df.loc[music_health_df[i] == music_health_df[i].unique()[0], i] = 0
   music_health_df.loc[music_health_df[i] == music_health_df[i].unique()[1], i] = 1
@@ -64,3 +66,15 @@ viceversa.""")
 st.write(sorted_corr_sequence[0:1])
 st.write("""On the other hand, the strongest negative correlation can be detected between the columns Hours_per_day and While_working, 
 assuming a value around -0.2879. This value is too small to say that these two columns are somehow negatively correlated.""")
+
+st.header("Plots")
+
+y = st.selectbox("Choose the plot:", music_health_df.columns[7:23], key = 1)
+
+# for col in music_health_df.columns[7:23]:
+#   if y == col:
+#     plt.figure(figsize = (8,6))
+#     plt.hist(backup_dataset2[col], color = "lightgreen")
+#     plt.xlabel("Frequence")
+#     plt.ylabel(col)
+#     plt.show()
