@@ -69,12 +69,44 @@ assuming a value around -0.2879. This value is too small to say that these two c
 
 st.header("Plots")
 
-y = st.selectbox("Choose the plot:", music_health_df.columns[7:23], key = 1)
+st.write("""The firt interesting type of plot is the histogram. I used it to represent the frequence of listening to the different 
+genres. In the x ax we can identify the frequence of listening, while in the y ax the number of people corresponding to each label 
+are represented.""")
+y = st.selectbox("Select the plot that you want to see:", music_health_df.columns[7:23], key = 1)
+for col in music_health_df.columns[7:23]:
+  if y == col:
+    fig,ax = plt.subplots()
+    ax.hist(backup_dataset2[col], color = "lightgreen")
+    ax.set_title("Frequence of " + str(col)[5:].replace("_", " ").replace("music", "") + " music")
+    ax.set_xlabel("Frequence")
+    ax.set_ylabel(str(col)[5:].replace("_", " ").replace("music", "") + " music")
+    st.pyplot(fig)
 
-# for col in music_health_df.columns[7:23]:
-#   if y == col:
-#     plt.figure(figsize = (8,6))
-#     plt.hist(backup_dataset2[col], color = "lightgreen")
-#     plt.xlabel("Frequence")
-#     plt.ylabel(col)
-#     plt.show()
+st.write("The second step correspond to a comparison between the various different genres of music. The idea is to use 4 pie charts.")
+frequences = []
+for col in music_health_df.columns[7:23]:
+    freq = dict(backup_dataset2[col].value_counts())
+    frequences.append(freq)
+rarely_list = [frequences[i]["Rarely"] for i in range(len(frequences))]
+never_list = [frequences[i]["Never"] for i in range(len(frequences))]
+sometimes_list = [frequences[i]["Sometimes"] for i in range(len(frequences))]
+very_frequently_list = [frequences[i]["Very frequently"] for i in range(len(frequences))]
+
+colors = ["Aqua", "Red", "Blue", "Green", "DarkMagenta", "Linen", "Gray", "HotPink", "Brown", "LightSeaGreen", "Olive", 
+          "Orchid", "Thistle", "SpringGreen", "Peru", "Yellow"]
+
+fig,axs = plt.subplots(2, 2, figsize = (18,14))
+axs[0,0].pie(never_list, startangle = 90, labels = music_health_df.columns[7:23], colors = colors)
+axs[0,0].title.set_text("Never")
+axs[0,1].pie(rarely_list, startangle = 90,labels = music_health_df.columns[7:23], colors = colors)
+axs[0,1].title.set_text("Rarely")
+axs[1,0].pie(sometimes_list, startangle = 90, labels = music_health_df.columns[7:23], colors = colors)
+axs[1,0].title.set_text("Sometimes")
+axs[1,1].pie(very_frequently_list, startangle = 90, labels = music_health_df.columns[7:23], colors = colors)
+axs[1,1].title.set_text("Very frequently")
+st.pyplot(fig)
+
+st.write("""From the charts, it is easy to see that the genre that has the highest amount of people listening to it very frequently is Rock,
+followed by Pop. On the contrary, the genres that have the highest amount of people never listening to it are Gospel, K-Pop and Latin.""")
+st.write("""The charts corresponding to the labels Rarely and Sometimes are almost balanced between the various genres, in particular the first one.""")
+
