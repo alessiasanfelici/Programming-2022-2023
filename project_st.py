@@ -110,3 +110,49 @@ st.write("""From the charts, it is easy to see that the genre that has the highe
 followed by Pop. On the contrary, the genres that have the highest amount of people never listening to it are Gospel, K-Pop and Latin.""")
 st.write("""The charts corresponding to the labels Rarely and Sometimes are almost balanced between the various genres, in particular the first one.""")
 
+st.write("""The following graph is an histogram, that represents the relation between age and music effects. The columns represent the frequence
+of each effect, with a different column for each age interval.""")
+mask_1 = (music_health_df["Age"] < 20) | (music_health_df["Age"] == 20)
+mask_2 = (music_health_df["Age"] > 20) & (music_health_df["Age"] < 40) | (music_health_df["Age"] == 40)
+mask_3 = (music_health_df["Age"] > 40) & (music_health_df["Age"] < 60) | (music_health_df["Age"] == 60)
+mask_4 = (music_health_df["Age"] > 60)
+music_health_df.loc[mask_1,"Age_group"] = "under 20"
+music_health_df.loc[mask_2, "Age_group"] = "21-40"
+music_health_df.loc[mask_3, "Age_group"] = "41-60"
+music_health_df.loc[mask_4, "Age_group"] = "over 60"
+
+fig,ax = plt.subplots(figsize = (10,8))
+ax.hist([music_health_df.loc[music_health_df["Age_group"] == "under 20","Music_effects"], music_health_df.loc[music_health_df["Age_group"] == "21-40","Music_effects"],
+music_health_df.loc[music_health_df["Age_group"] == "41-60","Music_effects"], music_health_df.loc[music_health_df["Age_group"] == "over 60","Music_effects"]], 
+color = ["hotpink", "green", "Aqua", "Yellow"], label = ["under 20", "21-40", "41-60", "over 60"])
+ax.set_xlabel("Music effects")
+ax.set_ylabel("Frequence for age")
+ax.set_title("Music effects frequence related to age")
+ax.set_xticks([0,1,2], ["No effect", "Improve", "Worsen"], rotation = 30)
+ax.legend()
+st.pyplot(fig)
+st.write("""The chart shows that in the majority of the cases, listening to music improve the situation of the patients. In all the possible
+effects, the highest columns are the ones related to the youngest people: under 20 and 21-40. That resul is due to the fact that these two 
+categories are the most represented in our data, as we can see from the following table:""")
+st.write(music_health_df["Age_group"].value_counts())
+
+st.write("""nuovo grafico spiegare """)
+
+fig, axs = plt.subplots(2, 2, figsize = (14,10))
+for i in range(0,2):
+    for j in range(2,4):
+        if i == 0:
+            axs[i,j-2].hist([music_health_df.loc[music_health_df[music_health_df.columns[-2]] == 0,music_health_df.columns[23:27][i+j-2]], music_health_df.loc[music_health_df[music_health_df.columns[-2]] == 1,music_health_df.columns[23:27][i+j-2]], 
+            music_health_df.loc[music_health_df[music_health_df.columns[-2]] == 2,music_health_df.columns[23:27][i+j-2]]], color = ["mediumturquoise", "cornflowerblue", "blue"], label = music_health_df.columns[23:27][i])
+            axs[i,j-2].title.set_text(music_health_df.columns[23:27][i+j-2])
+            axs[i,j-2].set_xlabel(music_health_df.columns[23:27][i+j-2])
+            axs[i,j-2].set_ylabel("Frequence")
+        else:
+            axs[i,j-2].hist([music_health_df.loc[music_health_df[music_health_df.columns[-2]] == 0,music_health_df.columns[23:27][i+j-1]], music_health_df.loc[music_health_df[music_health_df.columns[-2]] == 1,music_health_df.columns[23:27][i+j-1]], 
+            music_health_df.loc[music_health_df[music_health_df.columns[-2]] == 2,music_health_df.columns[23:27][i+j-1]]], color = ["mediumturquoise", "cornflowerblue", "blue"], label = music_health_df.columns[23:27][i+j-1])
+            axs[i,j-2].title.set_text(music_health_df.columns[23:27][i+j-1])
+            axs[i,j-2].set_xlabel(music_health_df.columns[23:27][i+j-1])
+            axs[i,j-2].set_ylabel("Frequence")
+st.pyplot(fig)
+
+st.write("""commento """)
