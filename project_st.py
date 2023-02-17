@@ -142,7 +142,7 @@ st.write("""The following graph is a set of histograms, showing the frequence of
 with a differentiation according to the effects of music on the patients.""")
 
 sns.set(style="darkgrid")
-fig, axs = plt.subplots(2, 2, figsize = (16,12))
+fig, axs = plt.subplots(2, 2, figsize = (16,16))
 for i in range(0,2):
     for j in range(2,4):
         if i == 0:
@@ -171,7 +171,7 @@ lot, but the highest frequences are registered at both very low and very high le
 
 st.write("""With the following plot, I wanted to analyze the relationship between Anxiety and Depression, since I found that they are the couple 
 with the highest level of correlation. I represented these two columns in 4 scatter plots, each one for an age group.""")
-fig, ax = plt.subplots(2, 2, figsize = (10,6))
+fig, ax = plt.subplots(2, 2)
 fig = sns.relplot(data = music_health_df, x="Anxiety", y="Depression", hue = "Age_group", col = "Age_group", kind="scatter", 
 col_wrap = 2, palette = ["g", "r", "orange", "blue"], marker = "X")
 st.pyplot(fig)
@@ -179,3 +179,48 @@ st.write("""As you can see, the plots corresponding to the youngest groups (unde
 in the correlation between the two attributes. That is due to the fact that their graphs are very confused, and points are represented without
 an explicable pattern. On the contrary, the other two groups seem to express a higher level of correlation between anxiety and depression, 
 in particular for the over 60 patients (it seems that we can approximate it with a linear relationship).""")
+
+st.write("spiegazione")
+
+x_train = music_health_df.loc[music_health_df["Age_group"] == "over 60","Anxiety"].loc[::2]
+y_train = music_health_df.loc[music_health_df["Age_group"] == "over 60","Depression"].loc[::2]
+x_test = music_health_df.loc[music_health_df["Age_group"] == "over 60","Anxiety"].loc[1::2]
+y_test = music_health_df.loc[music_health_df["Age_group"] == "over 60","Depression"].loc[1::2]
+
+def straight_line(x, m, q): 
+  return (m*x)+q
+
+def show_plot(y_train, model): 
+  fig, ax = plt.subplots()
+  plt.scatter(music_health_df.loc[music_health_df["Age_group"] == "over 60","Anxiety"], music_health_df.loc[music_health_df["Age_group"] == "over 60","Depression"])
+  plt.plot(x_train, model, "red")
+  st.pyplot(fig)
+
+def squared_error(y, model):
+  e = y - model
+  sq_e = e**2
+  return sum(sq_e)
+
+def fit(y_train, m, q, steps = 200, epsilon = 0.01):  
+  model = straight_line(x_train, m, q)
+  sq_e = squared_error(y_train, model)
+  print("Initial error:", sq_e)
+  for i in range(steps):
+    m_ = m + (np.random.choice([1,-1], size = 1)*epsilon) 
+    q_ = q + (np.random.choice([1,-1], size = 1)*epsilon) 
+    model_ = straight_line(x_train, m_, q)
+    sq_e_ = squared_error(y_train, model_)
+    if sq_e_ < sq_e: 
+      m = m_
+      q = q_
+      sq_e = sq_e_
+  print("Final error:", sq_e)
+  return m, q
+
+m, q = fit(y_train, 1 , 0, steps = 2000, epsilon = 0.001)
+model = straight_line(x_train, m, q)
+show_plot(y_train, model)
+
+st.write("spiegazione")
+
+st.write(m[0], q[0])
