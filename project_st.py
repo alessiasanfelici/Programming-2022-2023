@@ -133,7 +133,8 @@ plt.ylabel("Frequence for age")
 plt.title("Music effects frequence related to age")
 plt.legend()
 st.pyplot(fig)
-st.write("""The chart shows that in the majority of the cases, listening to music improve the situation of the patients. In all the possible
+st.write("""The chart shows that in the majority of the cases, listening to music improve the situation of the patients. No negative effect 
+was registered for patients over 40, the majority of which had positive effects, that improved their conditions. In all the possible
 effects, the highest columns are the ones related to the youngest people: under 20 and 21-40. This result is due to the fact that these two 
 categories are the most represented in our data, as we can see from the following table:""")
 st.write(music_health_df["Age_group"].value_counts())
@@ -180,12 +181,16 @@ in the correlation between the two attributes. That is due to the fact that thei
 an explicable pattern. On the contrary, the other two groups seem to express a higher level of correlation between anxiety and depression, 
 in particular for the over 60 patients (it seems that we can approximate it with a linear relationship).""")
 
-st.write("spiegazione")
+st.write("""The next idea was to investigate and further analyze the relationship between Anxiety and Depression fo the over 60 group. 
+I applied a linear model in order to understand if there was a linear correlation among these two variables. Starting from m = 1 and q = 0
+(that seemed to be reasonable values for the slope and the intercept of the straight line), I created and used some functions, of which the
+most important are the fitting function and the squared error function. After applying the fitting to the model, the error decreased - as we can
+see below - and the result obtained is the following:""")
 
 x_train = music_health_df.loc[music_health_df["Age_group"] == "over 60","Anxiety"].loc[::2]
 y_train = music_health_df.loc[music_health_df["Age_group"] == "over 60","Depression"].loc[::2]
-x_test = music_health_df.loc[music_health_df["Age_group"] == "over 60","Anxiety"].loc[1::2]
-y_test = music_health_df.loc[music_health_df["Age_group"] == "over 60","Depression"].loc[1::2]
+x_test = music_health_df.loc[music_health_df["Age_group"] == "over 60","Anxiety"].loc[2::2]
+y_test = music_health_df.loc[music_health_df["Age_group"] == "over 60","Depression"].loc[2::2]
 
 def straight_line(x, m, q): 
   return (m*x)+q
@@ -204,7 +209,7 @@ def squared_error(y, model):
 def fit(y_train, m, q, steps = 200, epsilon = 0.01):  
   model = straight_line(x_train, m, q)
   sq_e = squared_error(y_train, model)
-  print("Initial error:", sq_e)
+  st.write("Initial error:", sq_e)
   for i in range(steps):
     m_ = m + (np.random.choice([1,-1], size = 1)*epsilon) 
     q_ = q + (np.random.choice([1,-1], size = 1)*epsilon) 
@@ -214,13 +219,24 @@ def fit(y_train, m, q, steps = 200, epsilon = 0.01):
       m = m_
       q = q_
       sq_e = sq_e_
-  print("Final error:", sq_e)
+  st.write("Final error:", sq_e)
   return m, q
 
 m, q = fit(y_train, 1 , 0, steps = 2000, epsilon = 0.001)
-model = straight_line(x_train, m, q)
-show_plot(y_train, model)
+# model = straight_line(x_train, m, q)
+# show_plot(y_train, model)
 
-st.write("spiegazione")
+fig, ax = plt.subplots()
+plt.scatter(x_train, y_train, c = "green", label = "Train points")
+plt.scatter(x_test, y_test, c='red', label = "Test points")
+x = np.arange(len(y_train)+1)
+model = straight_line(x, m, q)
+plt.plot(model, label = "Model")
+plt.legend()
+st.pyplot(fig)
 
-st.write(m[0], q[0])
+st.write("Where the slope is", m[0], "and the intercept is", q[0], ".")
+
+st.write("""Since the squared error is not so bad, we can conclude this analysis by saying that anxiety and depression in over 60 
+patients are somehow related, having almost a linear relationship. For this reason these two attributes are generally registered
+simultaneously and with correlated levels in older people.""")
