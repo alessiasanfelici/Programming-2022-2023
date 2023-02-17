@@ -43,6 +43,8 @@ music_health_df["Music_effects"] = music_health_df["Music_effects"].astype(int)
 music_health_df[music_health_df.columns[0:2]] = music_health_df[music_health_df.columns[0:2]].astype(int)
 music_health_df[music_health_df.columns[23:27]] = music_health_df[music_health_df.columns[23:27]].astype(int)
 
+music_health_df.index = [x for x in range(len(music_health_df.index))]
+
 st.write("After having cleaned the dataset, I started exploring it, by printing the first rows, and using info() and describe() functions")
 st.write(music_health_df.head())
 st.text(music_health_df.info())
@@ -54,7 +56,7 @@ have not a strong linear correlation. However, I decided to search for the maxim
 most correlated columns.""")
 corr_matrix = music_health_df[music_health_df.columns[music_health_df.columns != "Fav_genre"]].corr()
 fig, ax = plt.subplots()
-sns.heatmap(corr_matrix)
+sns.heatmap(corr_matrix, cmap = sns.color_palette("mako", as_cmap=True))
 st.write(fig)
 
 corr_sequence = corr_matrix.unstack()
@@ -124,35 +126,56 @@ music_health_df.loc[mask_4, "Age_group"] = "over 60"
 fig,ax = plt.subplots(figsize = (10,8))
 ax.hist([music_health_df.loc[music_health_df["Age_group"] == "under 20","Music_effects"], music_health_df.loc[music_health_df["Age_group"] == "21-40","Music_effects"],
 music_health_df.loc[music_health_df["Age_group"] == "41-60","Music_effects"], music_health_df.loc[music_health_df["Age_group"] == "over 60","Music_effects"]], 
-color = ["hotpink", "green", "Aqua", "Yellow"], label = ["under 20", "21-40", "41-60", "over 60"])
-ax.set_xlabel("Music effects")
-ax.set_ylabel("Frequence for age")
-ax.set_title("Music effects frequence related to age")
-ax.set_xticks([0,1,2], ["No effect", "Improve", "Worsen"], rotation = 30)
-ax.legend()
+bins = 3, label = ["under 20", "21-40", "41-60", "over 60"], width = 0.15, color = sns.color_palette("rocket")[-1:-5:-1])
+plt.xticks([0.3,1,1.7], ["No effect", "Improve", "Worsen"])
+plt.xlabel("Music effects")
+plt.ylabel("Frequence for age")
+plt.title("Music effects frequence related to age")
+plt.legend()
 st.pyplot(fig)
 st.write("""The chart shows that in the majority of the cases, listening to music improve the situation of the patients. In all the possible
-effects, the highest columns are the ones related to the youngest people: under 20 and 21-40. That resul is due to the fact that these two 
+effects, the highest columns are the ones related to the youngest people: under 20 and 21-40. This result is due to the fact that these two 
 categories are the most represented in our data, as we can see from the following table:""")
 st.write(music_health_df["Age_group"].value_counts())
 
-st.write("""nuovo grafico spiegare """)
+st.write("""The following graph is a set of histograms, showing the frequence of various levels of Anxiety, Depression, Insomnia and OCD, 
+with a differentiation according to the effects of music on the patients.""")
 
-fig, axs = plt.subplots(2, 2, figsize = (14,10))
+sns.set(style="darkgrid")
+fig, axs = plt.subplots(2, 2, figsize = (16,12))
 for i in range(0,2):
     for j in range(2,4):
         if i == 0:
             axs[i,j-2].hist([music_health_df.loc[music_health_df[music_health_df.columns[-2]] == 0,music_health_df.columns[23:27][i+j-2]], music_health_df.loc[music_health_df[music_health_df.columns[-2]] == 1,music_health_df.columns[23:27][i+j-2]], 
-            music_health_df.loc[music_health_df[music_health_df.columns[-2]] == 2,music_health_df.columns[23:27][i+j-2]]], color = ["mediumturquoise", "cornflowerblue", "blue"], label = music_health_df.columns[23:27][i])
+            music_health_df.loc[music_health_df[music_health_df.columns[-2]] == 2,music_health_df.columns[23:27][i+j-2]]], color = ["mediumturquoise", "cornflowerblue", "blue"], label = ["No effect", "Improve", "Worsen"])
             axs[i,j-2].title.set_text(music_health_df.columns[23:27][i+j-2])
             axs[i,j-2].set_xlabel(music_health_df.columns[23:27][i+j-2])
             axs[i,j-2].set_ylabel("Frequence")
+            axs[i,j-2].legend()
         else:
             axs[i,j-2].hist([music_health_df.loc[music_health_df[music_health_df.columns[-2]] == 0,music_health_df.columns[23:27][i+j-1]], music_health_df.loc[music_health_df[music_health_df.columns[-2]] == 1,music_health_df.columns[23:27][i+j-1]], 
-            music_health_df.loc[music_health_df[music_health_df.columns[-2]] == 2,music_health_df.columns[23:27][i+j-1]]], color = ["mediumturquoise", "cornflowerblue", "blue"], label = music_health_df.columns[23:27][i+j-1])
+            music_health_df.loc[music_health_df[music_health_df.columns[-2]] == 2,music_health_df.columns[23:27][i+j-1]]], color = ["mediumturquoise", "cornflowerblue", "blue"], label = ["No effect", "Improve", "Worsen"])
             axs[i,j-2].title.set_text(music_health_df.columns[23:27][i+j-1])
             axs[i,j-2].set_xlabel(music_health_df.columns[23:27][i+j-1])
             axs[i,j-2].set_ylabel("Frequence")
+            axs[i,j-2].legend()
 st.pyplot(fig)
 
-st.write("""commento """)
+st.write("""From the graph, we can understand that the majority of people who registered the positive effect of music have high levels of anxiety and depression,
+but low levels of insomnia and OCD. Focusing on the worsen effect, it can be said that the graphs don't help in any further analysis because the
+bars of the histograms are very low. That is due to the fact that we had data about only 17 patients with a value "worsen" in the music effects column
+The only not irrelevant bar is the one related to insomnia equal to 10, that reaches a frquence around 8 for the people who had a worsen effect. Finally, 
+we can shift to patients who had no effect due to listening to music. They generally tend to have low levels of anxiety and even more of OCD. Their level of 
+anxiety seems to be independent, because the Aqua colored bars in the first histogram are more or less equally high. Their level of depression fluctuates a 
+lot, but the highest frequences are registered at both very low and very high levels.""")
+
+st.write("""With the following plot, I wanted to analyze the relationship between Anxiety and Depression, since I found that they are the couple 
+with the highest level of correlation. I represented these two columns in 4 scatter plots, each one for an age group.""")
+fig, ax = plt.subplots(2, 2, figsize = (10,6))
+fig = sns.relplot(data = music_health_df, x="Anxiety", y="Depression", hue = "Age_group", col = "Age_group", kind="scatter", 
+col_wrap = 2, palette = ["g", "r", "orange", "blue"], marker = "X")
+st.pyplot(fig)
+st.write("""As you can see, the plots corresponding to the youngest groups (under 20 and 21-40) are the ones that are responsible for a reduction
+in the correlation between the two attributes. That is due to the fact that their graphs are very confused, and points are represented without
+an explicable pattern. On the contrary, the other two groups seem to express a higher level of correlation between anxiety and depression, 
+in particular for the over 60 patients (it seems that we can approximate it with a linear relationship).""")
