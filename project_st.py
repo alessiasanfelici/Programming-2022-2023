@@ -101,17 +101,21 @@ never_list = [frequences[i]["Never"] for i in range(len(frequences))]
 sometimes_list = [frequences[i]["Sometimes"] for i in range(len(frequences))]
 very_frequently_list = [frequences[i]["Very frequently"] for i in range(len(frequences))]
 
-colors = ["Aqua", "Red", "Blue", "Green", "DarkMagenta", "Linen", "Gray", "HotPink", "Brown", "LightSeaGreen", "Olive", 
-          "Orchid", "Thistle", "SpringGreen", "Peru", "Yellow"]
+colors = ["plum", "lemonchiffon", "c", "tan", "lightblue", "Linen", "Gray", "lightskyblue", "lightgrey", "LightSeaGreen", "skyblue", 
+          "pink", "Thistle", "y", "lightsalmon", "lightcyan"]
 
 fig,axs = plt.subplots(2, 2, figsize = (18,14))
-axs[0,0].pie(never_list, startangle = 90, labels = music_health_df.columns[7:23], colors = colors)
+axs[0,0].pie(never_list, startangle = 90, labels = music_health_df.columns[7:23], wedgeprops = { "linewidth" : 1, "edgecolor" : "black" }, 
+colors = ["#B7C3F3", "#B7C3F3", "#B7C3F3", "#B7C3F3", "hotpink", "#B7C3F3", "#B7C3F3", "#DD7596", "orchid", "#B7C3F3", "#B7C3F3", "#B7C3F3", "#B7C3F3", "#B7C3F3", "#B7C3F3", "#B7C3F3"], 
+explode = [0, 0, 0, 0, 0.2, 0, 0, 0.2, 0.2, 0, 0, 0, 0, 0, 0, 0])
 axs[0,0].title.set_text("Never")
-axs[0,1].pie(rarely_list, startangle = 90,labels = music_health_df.columns[7:23], colors = colors)
+axs[0,1].pie(rarely_list, startangle = 90, labels = music_health_df.columns[7:23], wedgeprops = { "linewidth" : 1, "edgecolor" : "black" }, colors = colors)
 axs[0,1].title.set_text("Rarely")
-axs[1,0].pie(sometimes_list, startangle = 90, labels = music_health_df.columns[7:23], colors = colors)
+axs[1,0].pie(sometimes_list, startangle = 90, labels = music_health_df.columns[7:23], wedgeprops = { "linewidth" : 1, "edgecolor" : "black" }, colors = colors)
 axs[1,0].title.set_text("Sometimes")
-axs[1,1].pie(very_frequently_list, startangle = 90, labels = music_health_df.columns[7:23], colors = colors)
+axs[1,1].pie(very_frequently_list, startangle = 90, labels = music_health_df.columns[7:23], colors = ["#B7C3F3", "#B7C3F3", "#B7C3F3", "#B7C3F3", "#B7C3F3", 
+"#B7C3F3", "#B7C3F3", "#B7C3F3", "#B7C3F3", "#B7C3F3", "#B7C3F3", "orchid", "#B7C3F3", "#B7C3F3", "hotpink", "#B7C3F3"], 
+wedgeprops = { "linewidth" : 1, "edgecolor" : "black" }, explode = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0.2, 0, 0, 0.2, 0])
 axs[1,1].title.set_text("Very frequently")
 st.pyplot(fig)
 
@@ -264,7 +268,8 @@ for random_state in [1, 23, 42, 15, 56]:
     accuracies.append(accuracy_score(y_pred, y_test))
 st.table(accuracies)
 st.write("""It is evident that, from the selected models, the third one has the highest accuracy. For this reason, this is the
-model I selected and used for the prediction.
+model I selected and used for the prediction. This value of accuracy tells us that the model predicts the exact value for the music effects
+in around 80% of the cases.\\
 Here is the prediction of the music effects (where 0 = no effect, 1 = improve, 2 = worsen):""")
 
 x_train, x_test, y_train, y_test = train_test_split(x_data, y_data, test_size=0.2, random_state=42)
@@ -274,5 +279,5 @@ if st.button("Click here to see the predicted values"):
   st.table(y_pred)
 st.write("""As we can see from the predicted results, no patient was predicted to have negative effects (this is probably due to the fact
 that we have only a few cases of negative effects in our data). The prediction assigned to the majority of people the label 1 - Improve, while
-only 4 of them have a predicted no effect, as we can see from the following table:""")
+only a few of them have a predicted no effect, as we can see from the following table:""")
 st.table(np.unique(y_pred, return_counts = True))
