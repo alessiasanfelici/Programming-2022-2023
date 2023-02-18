@@ -3,6 +3,10 @@ import numpy as np
 import matplotlib.pyplot as plt
 import streamlit as st
 import seaborn as sns
+from sklearn.model_selection import train_test_split
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import accuracy_score
+
 music_health_df = pd.read_csv("Music & Mental Health.csv")
 st.title("Music & Mental Health Project")
 st.write("The selected Dataset contains data about...")
@@ -61,11 +65,15 @@ st.write(fig)
 
 corr_sequence = corr_matrix.unstack()
 sorted_corr_sequence = corr_sequence.sort_values(kind = "quicksort")
-st.write(sorted_corr_sequence[-29:-28])
+col1, col2 = st.columns(2)
+col1.caption("Strongest positive correlation")
+col1.write(sorted_corr_sequence[-29:-28])
+col2.caption("Strongest negative correlation")
+col2.write(sorted_corr_sequence[0:1])
 st.write("""The strongest positive correlation is between the columns Anxiety and Depression, registering a value around 0.5209.
 This reflects the idea that anxiety and depression are in a sense linearly correlated, with an increase in the second if the first increase, and 
 viceversa.""")
-st.write(sorted_corr_sequence[0:1])
+
 st.write("""On the other hand, the strongest negative correlation can be detected between the columns Hours_per_day and While_working, 
 assuming a value around -0.2879. This value is too small to say that these two columns are somehow negatively correlated.""")
 
@@ -80,8 +88,7 @@ for col in music_health_df.columns[7:23]:
     fig,ax = plt.subplots()
     ax.hist(backup_dataset2[col], color = "lightgreen")
     ax.set_title("Frequence of " + str(col)[5:].replace("_", " ").replace("music", "") + " music")
-    ax.set_xlabel("Frequence")
-    ax.set_ylabel(str(col)[5:].replace("_", " ").replace("music", "") + " music")
+    plt.ylabel("Counts")
     st.pyplot(fig)
 
 st.write("The second step correspond to a comparison between the various different genres of music. The idea is to use 4 pie charts.")
@@ -240,3 +247,32 @@ st.write("Where the slope is", m[0], "and the intercept is", q[0], ".")
 st.write("""Since the squared error is not so bad, we can conclude this analysis by saying that anxiety and depression in over 60 
 patients are somehow related, having almost a linear relationship. For this reason these two attributes are generally registered
 simultaneously and with correlated levels in older people.""")
+
+st.header("Model")
+st.write("""In this section, I'm presenting the model part of the project. I applied a Random Forest Classifier model, in order to 
+predict the music effects on patients. I compared different models obtained by using different random state values:""")
+
+y_data = music_health_df["Music_effects"]
+x_data = music_health_df.drop(["Music_effects", "Fav_genre", "Age_group"], axis = 1)
+
+accuracies = []
+model = RandomForestClassifier()
+for random_state in [1, 23, 42, 15, 56]:
+    x_train, x_test, y_train, y_test = train_test_split(x_data, y_data, test_size=0.2, random_state=random_state)
+    model.fit(x_train, y_train)
+    y_pred = model.predict(x_test)
+    accuracies.append(accuracy_score(y_pred, y_test))
+st.table(accuracies)
+st.write("""It is evident that, from the selected models, the third one has the highest accuracy. For this reason, this is the
+model I selected and used for the prediction.
+Here is the prediction of the music effects (where 0 = no effect, 1 = improve, 2 = worsen):""")
+
+x_train, x_test, y_train, y_test = train_test_split(x_data, y_data, test_size=0.2, random_state=42)
+model.fit(x_train, y_train)
+y_pred = model.predict(x_test)
+if st.button("Click here to see the predicted values"):
+  st.table(y_pred)
+st.write("""As we can see from the predicted results, no patient was predicted to have negative effects (this is probably due to the fact
+that we have only a few cases of negative effects in our data). The prediction assigned to the majority of people the label 1 - Improve, while
+only 4 of them have a predicted no effect, as we can see from the following table:""")
+st.table(np.unique(y_pred, return_counts = True))
