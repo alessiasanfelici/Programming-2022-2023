@@ -1,9 +1,12 @@
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
+import io
 import streamlit as st
 import seaborn as sns
 from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LinearRegression
+import sklearn.metrics as metrics
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import accuracy_score
 
@@ -32,10 +35,10 @@ for i in music_health_df.columns[7:23]:
   music_health_df.loc[music_health_df[i] == music_health_df[i].unique()[2], i] = 2
   music_health_df.loc[music_health_df[i] == music_health_df[i].unique()[3], i] = 3
 for i in music_health_df.columns[2:5]:
-  music_health_df.loc[music_health_df[i] == "Yes", i] = 0
-  music_health_df.loc[music_health_df[i] == "No", i] = 1
-music_health_df.loc[music_health_df["Exploratory"] == "Yes", "Exploratory"] = 0
-music_health_df.loc[music_health_df["Exploratory"] == "No", "Exploratory"] = 1
+  music_health_df.loc[music_health_df[i] == "Yes", i] = 1
+  music_health_df.loc[music_health_df[i] == "No", i] = 0
+music_health_df.loc[music_health_df["Exploratory"] == "Yes", "Exploratory"] = 1
+music_health_df.loc[music_health_df["Exploratory"] == "No", "Exploratory"] = 0
 music_health_df.loc[music_health_df["Music_effects"] == music_health_df.Music_effects.unique()[0], "Music_effects"] = 0
 music_health_df.loc[music_health_df["Music_effects"] == music_health_df.Music_effects.unique()[1], "Music_effects"] = 1
 music_health_df.loc[music_health_df["Music_effects"] == music_health_df.Music_effects.unique()[2], "Music_effects"] = 2
@@ -49,11 +52,14 @@ music_health_df[music_health_df.columns[23:27]] = music_health_df[music_health_d
 
 music_health_df.index = [x for x in range(len(music_health_df.index))]
 
-st.write("After having cleaned the dataset, I started exploring it, by printing the first rows, and using info() and describe() functions")
+st.write("After having cleaned the dataset, I started exploring it, by printing the first rows, and using info() and describe() functions.")
 st.write(music_health_df.head())
-st.text(music_health_df.info())
+buffer = io.StringIO()
+music_health_df.info(buf=buffer)
+st.text(buffer.getvalue())
 st.write(music_health_df.describe())
 
+st.subheader("Correlation")
 st.write("""Then, I studied the correlation between the pairs of columns of the dataset, except for the non-numeric columns. 
 The plot of a heatmap allowed me to understand that the correlation of the columns was generally low. This result proves that the pairs
 have not a strong linear correlation. However, I decided to search for the maximum negaive and positive values, in order to find the 
@@ -134,14 +140,14 @@ music_health_df.loc[mask_2, "Age_group"] = "21-40"
 music_health_df.loc[mask_3, "Age_group"] = "41-60"
 music_health_df.loc[mask_4, "Age_group"] = "over 60"
 
-fig,ax = plt.subplots(figsize = (10,8))
+fig, ax = plt.subplots(figsize = (10,8))
 ax.hist([music_health_df.loc[music_health_df["Age_group"] == "under 20","Music_effects"], music_health_df.loc[music_health_df["Age_group"] == "21-40","Music_effects"],
 music_health_df.loc[music_health_df["Age_group"] == "41-60","Music_effects"], music_health_df.loc[music_health_df["Age_group"] == "over 60","Music_effects"]], 
 bins = 3, label = ["under 20", "21-40", "41-60", "over 60"], width = 0.15, color = sns.color_palette("rocket")[-1:-5:-1])
 plt.xticks([0.3,1,1.7], ["No effect", "Improve", "Worsen"])
 plt.xlabel("Music effects")
-plt.ylabel("Frequence for age")
-plt.title("Music effects frequence related to age")
+plt.ylabel("Counts")
+plt.title("Music effects related to age")
 plt.legend()
 st.pyplot(fig)
 st.write("""The chart shows that in the majority of the cases, listening to music improve the situation of the patients. No negative effect 
@@ -181,6 +187,46 @@ we can shift to patients who had no effect due to listening to music. They gener
 anxiety seems to be independent, because the Aqua colored bars in the first histogram are more or less equally high. Their level of depression fluctuates a 
 lot, but the highest frequences are registered at both very low and very high levels.""")
 
+st.subheader("Groupby")
+st.write("""I firstly created a subset of my dataset, keeping only the columns I was interested in. Then, I decided to use the groupby function 
+in order to group the dataset according to music effects, and applying the mean. The result is the following dataset:""")
+new_dataset = music_health_df.copy()
+new_dataset.drop(music_health_df.columns[7:27], axis = 1, inplace = True)
+new_dataset.drop(music_health_df.columns[-1], axis = 1, inplace = True)
+new_dataset.drop(music_health_df.columns[5], axis = 1, inplace = True)
+data_groupby_effects_mean  = new_dataset.groupby(["Music_effects"]).mean()
+data_groupby_effects_mean["Music_effects"] = [0, 1, 2]
+st.write(data_groupby_effects_mean)
+
+st.write("""The values in the columns While_working, Instrumentalist, Composer, Exploratory represent the percentage of patients that 
+do the corresponsing action (that is because I set the values of the columns equal to 1 if the answer was Yes and 0 if the answer was no).
+My idea was to create a set of bar charts to represent the relationship between music effects and the mean of the selected columns. The 
+scope was to understand if a particular behaviour could be detected in these data.""")
+
+tab1, tab2, tab3, tab4, tab5 = st.tabs([x for x in data_groupby_effects_mean.columns[1:6]])
+tabs = [tab1, tab2, tab3, tab4, tab5]
+n = 0
+for i in data_groupby_effects_mean.columns[1:6]:
+    fig, ax = plt.subplots()
+    plt.bar(data_groupby_effects_mean["Music_effects"].index, data_groupby_effects_mean[i], width = 0.4, color = "c")
+    plt.xlabel("Music effect")
+    plt.ylabel("Mean")
+    tabs[n].markdown(i)
+    plt.xticks([0, 1, 2], ["No effect", "Improve", "Worsen"])
+    tabs[n].pyplot(fig)
+    n = n+1
+
+st.write("""By analyzing the charts, I understood that, in all the graphs, the central column is always the highest. This gives the idea
+that patients with positive and improved effects are associated with a higher mean. //
+Patients with improved effects tento to listen daily more music that the others. The are followed by people without any effect, that have
+a similar value for this column. The label worsen is characterized by a decrease in the hours of listening of around 1 hour per day. //
+All the other graph have a similar behaviour: the highest column is the one corresponding to an improve in the condition of the patients, while
+the other two column are shortest, with very similar values.""")
+st.write("""In conclusion, the more a person listen to music, even while working, and the more he/she is in an instrumentalist, a composer 
+or an exploratory person, then the more high is the likelihood that listening to music will have a positive effect on this patient, improving
+his/her condition in terms of levels of Anxiety, Depression, Insomnia and OCD.""")
+
+st.subheader("Anxiety and Depression")
 st.write("""With the following plot, I wanted to analyze the relationship between Anxiety and Depression, since I found that they are the couple 
 with the highest level of correlation. I represented these two columns in 4 scatter plots, each one for an age group.""")
 fig, ax = plt.subplots(2, 2)
@@ -192,69 +238,45 @@ in the correlation between the two attributes. That is due to the fact that thei
 an explicable pattern. On the contrary, the other two groups seem to express a higher level of correlation between anxiety and depression, 
 in particular for the over 60 patients (it seems that we can approximate it with a linear relationship).""")
 
+st.header("Models")
+st.subheader("Linear Regression")
 st.write("""The next idea was to investigate and further analyze the relationship between Anxiety and Depression fo the over 60 group. 
-I applied a linear model in order to understand if there was a linear correlation among these two variables. Starting from m = 1 and q = 0
-(that seemed to be reasonable values for the slope and the intercept of the straight line), I created and used some functions, of which the
-most important are the fitting function and the squared error function. After applying the fitting to the model, the error decreased - as we can
-see below - and the result obtained is the following:""")
+I applied a linear regression model in order to understand if there was a linear correlation among these two variables. The obtained 
+result is the following:""")
 
-x_train = music_health_df.loc[music_health_df["Age_group"] == "over 60","Anxiety"].loc[::2]
-y_train = music_health_df.loc[music_health_df["Age_group"] == "over 60","Depression"].loc[::2]
-x_test = music_health_df.loc[music_health_df["Age_group"] == "over 60","Anxiety"].loc[2::2]
-y_test = music_health_df.loc[music_health_df["Age_group"] == "over 60","Depression"].loc[2::2]
+x = music_health_df.loc[music_health_df["Age_group"] == "over 60","Anxiety"]
+y = music_health_df.loc[music_health_df["Age_group"] == "over 60","Depression"]
+x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.2)
 
 def straight_line(x, m, q): 
   return (m*x)+q
 
-def show_plot(y_train, model): 
-  fig, ax = plt.subplots()
-  plt.scatter(music_health_df.loc[music_health_df["Age_group"] == "over 60","Anxiety"], music_health_df.loc[music_health_df["Age_group"] == "over 60","Depression"])
-  plt.plot(x_train, model, "red")
-  st.pyplot(fig)
-
-def squared_error(y, model):
-  e = y - model
-  sq_e = e**2
-  return sum(sq_e)
-
-def fit(y_train, m, q, steps = 200, epsilon = 0.01):  
-  model = straight_line(x_train, m, q)
-  sq_e = squared_error(y_train, model)
-  st.write("Initial error:", sq_e)
-  for i in range(steps):
-    m_ = m + (np.random.choice([1,-1], size = 1)*epsilon) 
-    q_ = q + (np.random.choice([1,-1], size = 1)*epsilon) 
-    model_ = straight_line(x_train, m_, q)
-    sq_e_ = squared_error(y_train, model_)
-    if sq_e_ < sq_e: 
-      m = m_
-      q = q_
-      sq_e = sq_e_
-  st.write("Final error:", sq_e)
-  return m, q
-
-m, q = fit(y_train, 1 , 0, steps = 2000, epsilon = 0.001)
-# model = straight_line(x_train, m, q)
-# show_plot(y_train, model)
+x_train = np.array(x_train).reshape(-1,1)
+y_train = np.array(y_train).reshape(-1,1)
+x_test = np.array(x_test).reshape(-1,1)
+model = LinearRegression()
+model.fit(x_train, y_train)
+y_pred = model.predict(x_test)
 
 fig, ax = plt.subplots()
 plt.scatter(x_train, y_train, c = "blue", label = "Train points")
 plt.scatter(x_test, y_test, c = "LightSeaGreen", label = "Test points")
-x = np.arange(len(y_train)+1)
-model = straight_line(x, m, q)
-plt.plot(model, c = "Magenta", label = "Model")
+x = np.arange(11)
+line = straight_line(x, model.intercept_[0], model.coef_[0])
+plt.plot(line, c = "Magenta", label = "Model")
 plt.legend()
 st.pyplot(fig)
 
-st.write("Where the slope is", m[0], "and the intercept is", q[0], ".")
+st.write("Where the slope is", model.coef_[0], "and the intercept is", model.intercept_[0], ".")
+st.write("The mean squared error is: ", metrics.mean_squared_error(y_pred, y_test))
 
-st.write("""Since the squared error is not so bad, we can conclude this analysis by saying that anxiety and depression in over 60 
+st.write("""Since the mean squared error is not so bad, we can conclude this analysis by saying that anxiety and depression in over 60 
 patients are somehow related, having almost a linear relationship. For this reason these two attributes are generally registered
 simultaneously and with correlated levels in older people.""")
 
-st.header("Model")
-st.write("""In this section, I'm presenting the model part of the project. I applied a Random Forest Classifier model, in order to 
-predict the music effects on patients. I compared different models obtained by using different random state values:""")
+st.subheader("Random Forest Classifier")
+st.write("""In this section, I applied a Random Forest Classifier model, in order to predict the music effects on patients. 
+I compared different models obtained by using different random state values:""")
 
 y_data = music_health_df["Music_effects"]
 x_data = music_health_df.drop(["Music_effects", "Fav_genre", "Age_group"], axis = 1)
