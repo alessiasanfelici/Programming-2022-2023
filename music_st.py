@@ -10,6 +10,8 @@ import sklearn.metrics as metrics
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import accuracy_score
 from sklearn.cluster import KMeans
+from sklearn.preprocessing import StandardScaler
+from sklearn.decomposition import PCA
 
 music_health_df = pd.read_csv("Music & Mental Health.csv")
 st.title("Music & Mental Health Project")
@@ -308,9 +310,6 @@ that we have only a few cases of negative effects in our data). The prediction a
 only a few of them have a predicted no effect, as we can see from the following table:""")
 st.table(np.unique(y_pred, return_counts = True))
 
-st.subheader("Clustering and PCA")
-
-
 
 st.subheader("Clustering with Kmeans")
 st.write("""I wanted to deepen study the relationship between Age and Hours per day of music listened. The following graph represents the
@@ -337,7 +336,7 @@ fig, axs = plt.subplots()
 plt.plot(range(1,11), square_distances, "rx-")
 plt.xlabel("K")
 plt.ylabel("Inertia")
-plt.title("Inerzia per number of clusters")
+plt.title("Inertia per number of clusters")
 plt.xticks(list(range(1,11)))
 st.pyplot(fig)
 
@@ -363,3 +362,57 @@ different marker. I noticed that the second cluster is more separated from the o
 to each other, in particular for the values around the age of about 28 yo. So, this two clusters are not so separated, as if we changed the
 label of the points around the age of 28, then the resoult would be pretty much the same. The squared distance will change, but its value
 will be almost the same (the change is very smooth).""")
+
+st.subheader("Principal Component Analysis")
+st.write("""The aim of this section is to reduce the dimensions of my dataset, in order to dicover if it is possible to better understand and 
+explain the behaviour of the Music effects columns, that is the target of this analysis. \\
+First of all, I normalized the dataset (considering only the numerical columns):""")
+x = music_health_df.drop(["Music_effects", "Fav_genre", "Age_group"], axis=1)
+x = StandardScaler().fit_transform(x)
+col = music_health_df.columns
+col = col.drop(["Music_effects", "Fav_genre", "Age_group"])
+normalized_music_health_df = pd.DataFrame(x, columns=[i + " normalized" for i in col])
+st.write(normalized_music_health_df.head())
+
+st.write("I decided to start from 20 Principal Components and evaluate the cumulative explained variance of each component:")
+n_components = 20
+pca = PCA(n_components = n_components)
+principal_components = pca.fit_transform(x)
+principal_music_health_df = pd.DataFrame(principal_components, columns = ['PC_' + str(x + 1) for x in range(n_components)])
+st.write(principal_music_health_df.head())
+sum_variance = []
+for i in range(1, 21):
+    sum_variance.append(sum(pca.explained_variance_ratio_[:i]))
+
+st.write("Cumulative explained variance: ")
+st.write(sum_variance)
+
+fig, axs = plt.subplots()
+plt.plot(range(1, 21), sum_variance, "rx-")
+plt.xlabel("Number of PC")
+plt.ylabel("Cumulative Explained Variance")
+plt.xticks(list(range(1, 21)))
+st.pyplot(fig)
+st.write("""It is evident that each component gives a very low contribution to the cumulative variance. So, it is necessary to select a
+relative high number of principal component to describe the data. For example, by selecting 14 components, we can obtain a good level
+of comulative explained variance: 70%.\\
+I wanted to analyze the situation obtained by selecting only 2 components, in order to make it possible to represents the data:""")
+n_components = 2
+pca = PCA(n_components = n_components)
+principal_components = pca.fit_transform(x)
+principal_music_health_df = pd.DataFrame(principal_components, columns = ["PC_" + str(x+1) for x in range(n_components)])
+
+labels = ["No effects", "Improve", "Worsen"]
+colors = ["b", "lightgreen", "deeppink"]
+plt.figure(figsize = (10,6))
+plt.xlabel("Principal Component 1")
+plt.ylabel("Principal Component 2")
+targets = [0, 1, 2]
+fig, ax = plt.subplots()
+for t in targets:
+  plt.scatter(principal_music_health_df.loc[music_health_df["Music_effects"] == t, "PC_1"], 
+  principal_music_health_df.loc[music_health_df["Music_effects"] == t, "PC_2"], label = labels[t], color = colors[t])
+plt.legend()
+st.pyplot(fig)
+
+st.write("Conclusion and explanation")
