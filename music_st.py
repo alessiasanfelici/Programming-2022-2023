@@ -14,7 +14,9 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.decomposition import PCA
 
 music_health_df = pd.read_csv("Music & Mental Health.csv")
-st.title("Music & Mental Health Project")
+st.title("Music & Mental Health Project, Alessia Sanfelici")
+
+st.header("Introduction and first study of the dataset")
 st.write("""The selected Dataset collects information about the effect of Music Therapy on people. The data contained in the dataset refers to
 answers of selected individuals about their personal background, their music habits, their ranks about how often they listen to 16 music genres (Never, Rarely, 
 Sometimes or Very Frequently), and their ranks about experienced levels of Anxiety, Depression, Insomnia and OCD (from 0 to 10). The last column 
@@ -59,6 +61,15 @@ music_health_df[music_health_df.columns[23:27]] = music_health_df[music_health_d
 
 music_health_df.index = [x for x in range(len(music_health_df.index))]
 
+mask_1 = (music_health_df["Age"] < 20) | (music_health_df["Age"] == 20)
+mask_2 = (music_health_df["Age"] > 20) & (music_health_df["Age"] < 40) | (music_health_df["Age"] == 40)
+mask_3 = (music_health_df["Age"] > 40) & (music_health_df["Age"] < 60) | (music_health_df["Age"] == 60)
+mask_4 = (music_health_df["Age"] > 60)
+music_health_df.loc[mask_1,"Age_group"] = "under 20"
+music_health_df.loc[mask_2, "Age_group"] = "21-40"
+music_health_df.loc[mask_3, "Age_group"] = "41-60"
+music_health_df.loc[mask_4, "Age_group"] = "over 60"
+
 st.write("""After having cleaned the dataset (by removing the irrelvant columns, properly changing the values in some columns from categorical
 to numerical, and dealing with the missing values), I started exploring it to understand better what to do in the following steps. Printing the 
 first rows, and using info() and describe() functions, allowed me to have a general overview of the available data.""")
@@ -73,7 +84,7 @@ st.write("""I studied the correlation between the pairs of columns of the datase
 The plot of a heatmap allowed me to understand that the correlation of the columns was generally low. This result proves that the pairs
 have not a strong linear correlation. However, I decided to search for the maximum negative and positive values, in order to find the 
 most correlated columns.""")
-corr_matrix = music_health_df[music_health_df.columns[music_health_df.columns != "Fav_genre"]].corr()
+corr_matrix = music_health_df.drop("Fav_genre", axis = 1).corr()
 fig, ax = plt.subplots()
 sns.heatmap(corr_matrix, cmap = sns.color_palette("mako", as_cmap=True))
 st.write(fig)
@@ -91,7 +102,7 @@ first increase, and viceversa. \\
 On the other hand, the strongest negative correlation can be detected between the columns Hours_per_day and While_working, 
 assuming a value around -0.2879. This value is too small to say that these two columns are somehow negatively correlated.""")
 
-st.header("Analysis with Plots and Models")
+st.header("Deeper analysis with Plots and Models")
 
 st.subheader("Music genres listening frequence")
 st.write("""Firstly, I wanted to focus my analysis on the study of music tastes of the selected individuals. For this scope, I used an histogram 
@@ -138,34 +149,6 @@ st.pyplot(fig)
 st.write("""From the charts, it is easy to see that the genre that has the highest amount of people listening to it very frequently is Rock,
 followed by Pop. On the contrary, the genres that have the highest amount of people never listening to it are Gospel, K-Pop and Latin.\\
 The charts corresponding to the labels Rarely and Sometimes are more or less balanced between the various genres, in particular the first one.""")
-
-st.subheader("Age and music effects")
-st.write("""Then I used another histogram, in order to represent the relationship between age and music effects. The columns represent the frequence
-of each effect, with a different column for each age interval.""")
-mask_1 = (music_health_df["Age"] < 20) | (music_health_df["Age"] == 20)
-mask_2 = (music_health_df["Age"] > 20) & (music_health_df["Age"] < 40) | (music_health_df["Age"] == 40)
-mask_3 = (music_health_df["Age"] > 40) & (music_health_df["Age"] < 60) | (music_health_df["Age"] == 60)
-mask_4 = (music_health_df["Age"] > 60)
-music_health_df.loc[mask_1,"Age_group"] = "under 20"
-music_health_df.loc[mask_2, "Age_group"] = "21-40"
-music_health_df.loc[mask_3, "Age_group"] = "41-60"
-music_health_df.loc[mask_4, "Age_group"] = "over 60"
-
-fig, ax = plt.subplots(figsize = (10,8))
-ax.hist([music_health_df.loc[music_health_df["Age_group"] == "under 20","Music_effects"], music_health_df.loc[music_health_df["Age_group"] == "21-40","Music_effects"],
-music_health_df.loc[music_health_df["Age_group"] == "41-60","Music_effects"], music_health_df.loc[music_health_df["Age_group"] == "over 60","Music_effects"]], 
-bins = 3, label = ["under 20", "21-40", "41-60", "over 60"], width = 0.15, color = sns.color_palette("rocket")[-1:-5:-1])
-plt.xticks([0.3,1,1.7], ["No effect", "Improve", "Worsen"])
-plt.xlabel("Music effects")
-plt.ylabel("Counts")
-plt.title("Music effects related to age")
-plt.legend()
-st.pyplot(fig)
-st.write("""The chart shows that in the majority of the cases, listening to music improve the situation of the patients. No negative effect 
-was registered for patients over 40, the majority of which had positive effects, improving their conditions. In correspondence of all the 
-three labels, the highest columns are the ones related to the youngest people: under 20 and 21-40. This result is due to the fact that these 
-two categories are the most represented in the available data, as we can see from the following table:""")
-st.write(music_health_df["Age_group"].value_counts())
 
 st.subheader("Anxiety, Depression, Insomnia and OCD")
 st.write("""I thought it could be interesting to analyze the attributes relative to Anxiety, Depression, Insomnia and OCD. My idea was to
@@ -246,6 +229,80 @@ st.write("""Since the mean squared error is relatively low, we can conclude this
 individuals are somehow correlated, having almost a linear relationship. For this reason these two attributes are generally registered
 simultaneously and with correlated levels in older people.""")
 
+st.subheader("Age and Hours per day - Clustering")
+st.write("""I wanted to deepen study the relationship between Age and Hours per day of music listened, in order to understand if there is 
+a correlation between these two attributes. I expected to find some result, because I believe that the hours of music listened per day 
+somehow depends on the age on the individual. The following graph represents the behaviour of these two attributes in the available data.""")
+
+fig, axs = plt.subplots()
+plt.scatter(music_health_df["Age"], music_health_df["Hours_per_day"], c = "darkmagenta", marker = "*")
+plt.xlabel("Age")
+plt.ylabel("Hours per day")
+plt.title("Age and Hours of music per day")
+st.pyplot(fig)
+
+st.write("""I understood that I could apply the KMeans method, in order to find if these two attributes were characterized by some clusters.
+For understanding the appropriate number of clusters, I used the Elbow method. The idea of this technique is to compare the value of the sum 
+of squared distances of samples to their closest cluster center (the so called inertia).""")
+square_distances = []
+x = music_health_df[["Age", "Hours_per_day"]]
+for i in range(1,11):
+  km = KMeans(n_clusters = i, n_init = "auto", random_state = 42)
+  km.fit(x)
+  square_distances.append(km.inertia_)
+
+fig, axs = plt.subplots()
+plt.plot(range(1,11), square_distances, "rx-")
+plt.xlabel("K")
+plt.ylabel("Inertia")
+plt.title("Inertia per number of clusters")
+plt.xticks(list(range(1,11)))
+st.pyplot(fig)
+
+st.write("""The appropriate number of clusters is given by the value that correspont to the last elbow: in my case this value was 3. So,
+I needed to search for 3 clusters.""")
+km = KMeans(n_clusters = 3, n_init = "auto", random_state = 42)
+y_pred = km.fit_predict(x)
+
+labels = ["Cluster 1", "Cluster 2", "Cluster 3"]
+colors = ["mediumorchid", "violet", "rebeccapurple"]
+markers = ["+", "d", "."]
+fig, axs = plt.subplots()
+for i in range(3):
+  plt.scatter(x.loc[y_pred == i, "Age"], x.loc[y_pred == i, "Hours_per_day"], label = labels[i], c = colors[i], marker = markers[i])
+plt.xlabel("Age")
+plt.ylabel("Hours per day")
+plt.title("Age and Hours of music per day")
+plt.legend()
+st.pyplot(fig)
+
+st.write("""The above plot represents the clusters that I found with the KMeans method, each one pictured with a different color and a 
+different marker. I noticed that the second cluster is more separated from the others, while the first and the third ones are very close
+to each other. This holds particularly for the values around an age of about 28 years old. So, the first and the third cluster are not so separated: 
+if we changed the label of the points around the age of 28, then the result would be pretty much the same. The squared distance will change, 
+but its value will be almost equivalent (the change is very smooth).""")
+
+
+st.subheader("Age and music effects")
+st.write("""Then I used another histogram, in order to represent the relationship between age and music effects. The columns represent the frequence
+of each effect, with a different column for each age interval.""")
+
+fig, ax = plt.subplots(figsize = (10,8))
+ax.hist([music_health_df.loc[music_health_df["Age_group"] == "under 20","Music_effects"], music_health_df.loc[music_health_df["Age_group"] == "21-40","Music_effects"],
+music_health_df.loc[music_health_df["Age_group"] == "41-60","Music_effects"], music_health_df.loc[music_health_df["Age_group"] == "over 60","Music_effects"]], 
+bins = 3, label = ["under 20", "21-40", "41-60", "over 60"], width = 0.15, color = sns.color_palette("rocket")[-1:-5:-1])
+plt.xticks([0.3,1,1.7], ["No effect", "Improve", "Worsen"])
+plt.xlabel("Music effects")
+plt.ylabel("Counts")
+plt.title("Music effects related to age")
+plt.legend()
+st.pyplot(fig)
+st.write("""The chart shows that in the majority of the cases, listening to music improve the situation of the patients. No negative effect 
+was registered for patients over 40, the majority of which had positive effects, improving their conditions. In correspondence of all the 
+three labels, the highest columns are the ones related to the youngest people: under 20 and 21-40. This result is due to the fact that these 
+two categories are the most represented in the available data, as we can see from the following table:""")
+st.write(music_health_df["Age_group"].value_counts())
+
 st.subheader("Groupby")
 st.write("""I firstly created a subset of my dataset, keeping only the columns I was interested in. Then, I decided to use the groupby function 
 in order to group the dataset according to music effects, and apply the mean. The result is the following dataset:""")
@@ -287,8 +344,8 @@ or an exploratory person, then the higher is the likelihood that listening to mu
 his/her condition in terms of levels of Anxiety, Depression, Insomnia and OCD.""")
 
 st.subheader("Random Forest Classifier")
-st.write("""In this section, I applied a Random Forest Classifier model, in order to predict the music effects on patients. 
-I compared different models obtained by using different random state values:""")
+st.write("""I applied a Random Forest Classifier model, in order to predict the music effects on patients. I found the best model by changing 
+the random state value and comparing the correspondent accurancy obtained:""")
 
 y_data = music_health_df["Music_effects"]
 x_data = music_health_df.drop(["Music_effects", "Fav_genre", "Age_group"], axis = 1)
@@ -301,9 +358,8 @@ for random_state in [1, 23, 42, 15, 56]:
     y_pred = model.predict(x_test)
     accuracies.append(accuracy_score(y_pred, y_test))
 st.table(accuracies)
-st.write("""It is evident that, from the selected models, the third one has the highest accuracy. For this reason, this is the
-model I selected and used for the prediction. This value of accuracy tells us that the model predicts the exact value for the music effects
-in around 80% of the cases.\\
+st.write("""It is evident that the third one has the highest accuracy. For this reason, this is the one I selected and used for the prediction 
+(the correspondent random state was 42). This value of accuracy tells me that the prediction the model is exact in around 80% of the cases.\\
 Here is the prediction of the music effects (where 0 = no effect, 1 = improve, 2 = worsen):""")
 
 x_train, x_test, y_train, y_test = train_test_split(x_data, y_data, test_size=0.2, random_state=42)
@@ -312,62 +368,9 @@ y_pred = model.predict(x_test)
 if st.button("Click here to see the predicted values"):
   st.table(y_pred)
 st.write("""As we can see from the predicted results, no patient was predicted to have negative effects (this is probably due to the fact
-that we have only a few cases of negative effects in our data). The prediction assigned to the majority of people the label 1 - Improve, while
-only a few of them have a predicted no effect, as we can see from the following table:""")
+that we have only a few cases of negative effects in our data). The prediction assigned to the majority of people is the label 1 - Improve, 
+while only a few of them have a predicted no effect, as we can see from the following table:""")
 st.table(np.unique(y_pred, return_counts = True))
-
-
-st.subheader("Clustering with Kmeans")
-st.write("""I wanted to deepen study the relationship between Age and Hours per day of music listened. The following graph represents the
-behaviour of these two attributes in the available data.""")
-
-fig, axs = plt.subplots()
-plt.scatter(music_health_df["Age"], music_health_df["Hours_per_day"], c = "darkmagenta", marker = "*")
-plt.xlabel("Age")
-plt.ylabel("Hours per day")
-plt.title("Age and Hours of music per day")
-st.pyplot(fig)
-
-st.write("""I understood that I could apply the KMeans method, to find if these two attributes were characterized by some clusters.
-In order to understand the appropriate number of clusters, I used the Elbow method. The idea is to compare the value of the sum 
-of squared distances of samples to their closest cluster center (the so called inertia).""")
-square_distances = []
-x = music_health_df[["Age", "Hours_per_day"]]
-for i in range(1,11):
-  km = KMeans(n_clusters = i, n_init = "auto", random_state = 42)
-  km.fit(x)
-  square_distances.append(km.inertia_)
-
-fig, axs = plt.subplots()
-plt.plot(range(1,11), square_distances, "rx-")
-plt.xlabel("K")
-plt.ylabel("Inertia")
-plt.title("Inertia per number of clusters")
-plt.xticks(list(range(1,11)))
-st.pyplot(fig)
-
-st.write("""The appropriate number of clusters is given by the value that correspont to the last elbow: in this case this value is 3. So,
-I needed to search for 3 clusters.""")
-km = KMeans(n_clusters = 3, n_init = "auto", random_state = 42)
-y_pred = km.fit_predict(x)
-
-labels = ["Cluster 1", "Cluster 2", "Cluster 3"]
-colors = ["mediumorchid", "violet", "rebeccapurple"]
-markers = ["+", "d", "."]
-fig, axs = plt.subplots()
-for i in range(3):
-  plt.scatter(x.loc[y_pred == i, "Age"], x.loc[y_pred == i, "Hours_per_day"], label = labels[i], c = colors[i], marker = markers[i])
-plt.xlabel("Age")
-plt.ylabel("Hours per day")
-plt.title("Age and Hours of music per day")
-plt.legend()
-st.pyplot(fig)
-
-st.write("""The above plot represents the clusters that I found with the KMeans method, each one pictured with a different color and a 
-different marker. I noticed that the second cluster is more separated from the others, while the first and the third ones are very close
-to each other, in particular for the values around the age of about 28 yo. So, this two clusters are not so separated, as if we changed the
-label of the points around the age of 28, then the resoult would be pretty much the same. The squared distance will change, but its value
-will be almost the same (the change is very smooth).""")
 
 st.subheader("Principal Component Analysis")
 st.write("""The aim of this section is to reduce the dimensions of my dataset, in order to dicover if it is possible to better understand and 
@@ -380,7 +383,7 @@ col = col.drop(["Music_effects", "Fav_genre", "Age_group"])
 normalized_music_health_df = pd.DataFrame(x, columns=[i + " normalized" for i in col])
 st.write(normalized_music_health_df.head())
 
-st.write("I decided to start from 20 Principal Components and evaluate the cumulative explained variance of each component:")
+st.write("I decided to start from 20 Principal Components and evaluate the cumulative explained variance:")
 n_components = 20
 pca = PCA(n_components = n_components)
 principal_components = pca.fit_transform(x)
@@ -399,9 +402,9 @@ plt.xlabel("Number of PC")
 plt.ylabel("Cumulative Explained Variance")
 plt.xticks(list(range(1, 21)))
 st.pyplot(fig)
-st.write("""It is evident that each component gives a very low contribution to the cumulative variance. So, it is necessary to select a
-relative high number of principal component to describe the data. For example, by selecting 14 components, we can obtain a good level
-of comulative explained variance: 70%.\\
+st.write("""It is evident that each component gives a very low contribution to the cumulative explained variance. So, it is necessary 
+to select a relative high number of principal component to describe the data. For example, by selecting 14 components, we can obtain 
+a good level of comulative explained variance: 70%.\\
 I wanted to analyze the situation obtained by selecting only 2 components, in order to make it possible to represents the data:""")
 n_components = 2
 pca = PCA(n_components = n_components)
@@ -421,9 +424,9 @@ for t in targets:
 plt.legend()
 st.pyplot(fig)
 
-st.write("""We can immediatly notice that the three categories, corresponding to the labels of music effects, overlap in the plot, making
-the graph very confused. As noticed before, two components explain only about 18% of the variance. This is a very low level, that do not 
-allow to create separated clusters, according to the music effect. For this reason, it is necessary to increase the number of Principal 
+st.write("""We can immediatly notice that the three clusters, corresponding to the labels of music effects, overlap in the plot, making
+the graph very confused. As I found before, two components explain only about 18% of the variance. This is a very low level, that do not 
+allow to create separated clusters according to the music effect. For this reason, it is necessary to increase the number of Principal 
 Components needed to represent the data. The problem with an increase in dimension is that then it is not possible to visually represent the
 data in a plot. However, selecting for example 14 principal components is a good solution, allowing to reduce the dimensions of the dataset 
 of 12 units.""")
