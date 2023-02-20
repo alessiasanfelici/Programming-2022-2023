@@ -161,14 +161,14 @@ for i in range(0,2):
     for j in range(2,4):
         if i == 0:
             axs[i,j-2].hist([music_health_df.loc[music_health_df[music_health_df.columns[-2]] == 0,music_health_df.columns[23:27][i+j-2]], music_health_df.loc[music_health_df[music_health_df.columns[-2]] == 1,music_health_df.columns[23:27][i+j-2]], 
-            music_health_df.loc[music_health_df[music_health_df.columns[-2]] == 2,music_health_df.columns[23:27][i+j-2]]], color = ["mediumturquoise", "cornflowerblue", "blue"], label = ["No effect", "Improve", "Worsen"])
+            music_health_df.loc[music_health_df[music_health_df.columns[-2]] == 2,music_health_df.columns[23:27][i+j-2]]], color = ["mediumturquoise", "cornflowerblue", "blue"], label = ["No effect", "Improve", "Worsen"], align = "right")
             axs[i,j-2].title.set_text(music_health_df.columns[23:27][i+j-2])
             axs[i,j-2].set_xlabel(music_health_df.columns[23:27][i+j-2])
             axs[i,j-2].set_ylabel("Frequence")
             axs[i,j-2].legend()
         else:
             axs[i,j-2].hist([music_health_df.loc[music_health_df[music_health_df.columns[-2]] == 0,music_health_df.columns[23:27][i+j-1]], music_health_df.loc[music_health_df[music_health_df.columns[-2]] == 1,music_health_df.columns[23:27][i+j-1]], 
-            music_health_df.loc[music_health_df[music_health_df.columns[-2]] == 2,music_health_df.columns[23:27][i+j-1]]], color = ["mediumturquoise", "cornflowerblue", "blue"], label = ["No effect", "Improve", "Worsen"])
+            music_health_df.loc[music_health_df[music_health_df.columns[-2]] == 2,music_health_df.columns[23:27][i+j-1]]], color = ["mediumturquoise", "cornflowerblue", "blue"], label = ["No effect", "Improve", "Worsen"], align = "right")
             axs[i,j-2].title.set_text(music_health_df.columns[23:27][i+j-1])
             axs[i,j-2].set_xlabel(music_health_df.columns[23:27][i+j-1])
             axs[i,j-2].set_ylabel("Frequence")
@@ -325,7 +325,7 @@ tabs = [tab1, tab2, tab3, tab4, tab5]
 n = 0
 for i in data_groupby_effects_mean.columns[1:6]:
     fig, ax = plt.subplots()
-    plt.bar(data_groupby_effects_mean["Music_effects"].index, data_groupby_effects_mean[i], width = 0.4, color = "c")
+    plt.bar(data_groupby_effects_mean["Music_effects"].index, data_groupby_effects_mean[i], width = 0.4, color = "c", edgecolor = "black")
     plt.xlabel("Music effect")
     plt.ylabel("Mean")
     tabs[n].markdown(i)
