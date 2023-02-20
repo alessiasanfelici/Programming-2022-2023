@@ -23,9 +23,14 @@ st.write("""The selected Dataset collects information about the effect of Music 
 answers of selected individuals about their personal background, their music habits, their ranks about how often they listen to 16 music genres (Never, Rarely, 
 Sometimes or Very Frequently), and their ranks about experienced levels of Anxiety, Depression, Insomnia and OCD (from 0 to 10). The last column 
 represents the effect of listening to music on each person.\\
-The scope of this analysis is to understand if there is any correlation between music tastes and mental health. The results could be a guide for 
-better applying music therapy. Moreover, we can use the available data to gain a deeper knowledge about human mind, as it is always difficult 
-to understand and explain how it works and what is able to influence it.""")
+After a general presentation of the dataset, this report will focus on the study of the behaviour of the selected individuals,
+in order to understand music tastes and trends in levels of anxiety, depression, insomnia and OCD, and study the relationship between age and hours of listening.
+Then, the last focus will be on the attribute Music effects: in the last part of the analysis I focused on the study of this column, both in relationship with 
+other attributes and alone. This part also aims at using models to predict and better understand the music effects on the selected individuals.\\
+The scope of this analysis is to find if there is any correlation between music tastes and mental health, focusing on the effect that 
+music has on mental health (does it improve the condition of an individual, or has it negative consequences?). The results could be a guide for 
+better applying music therapy, according to age and habits. Moreover, we can use the available data to gain a deeper knowledge about human mind, 
+as it is always difficult to understand and explain how it works and what is able to influence it.""")
 
 #cleaning of the dataset
 music_health_df.columns = [col.replace(" ", "_").replace("Frequency", "Freq").replace("[","").replace("]","") for col in music_health_df.columns]
@@ -96,27 +101,27 @@ st.write("""The columns of the cleaned dataset are:\\
         - Composer: does the person compose music?\\
         - Fav_genre: favourite genre\\
         - Exploratory: does the person actively explore new artists/genres?\\
-        - Freq_Classical: how frequently the respondent listens to classical music\\
-        - Freq_Country: how frequently the respondent listens to country music\\
-        - Freq_EDM: how frequently the respondent listens to EDM music\\
-        - Freq_Folk: how frequently the respondent listens to folks music\\
-        - Freq_Gospel: how frequently the respondent listens to gospel music\\
-        - Freq_Hip_hop: how frequently the respondent listens to hip hop music\\
-        - Freq_Jazz: how frequently the respondent listens to jazz music\\
-        - Freq_K_pop: how frequently the respondent listens to k-pop music\\
-        - Freq_Latin: how frequently the respondent listens to latin music\\
-        - Freq_Lofi: how frequently the respondent listens to lofi music\\
-        - Freq_Metal: how frequently the respondent listens to metal music\\
-        - Freq_Pop: how frequently the respondent listens to pop music\\
-        - Freq_R&B: how frequently the respondent listens to R&B music\\
-        - Freq_Rap: how frequently the respondent listens to rap music\\
-        - Freq_Rock: how frequently the respondent listens to rock music\\
-        - Freq_Video_game_music: how frequently the respondent listens to video game music\\
+        - Freq_Classical: how frequently the interviewee listens to classical music\\
+        - Freq_Country: how frequently the interviewee listens to country music\\
+        - Freq_EDM: how frequently the interviewee listens to EDM music\\
+        - Freq_Folk: how frequently the interviewee listens to folks music\\
+        - Freq_Gospel: how frequently the interviewee listens to gospel music\\
+        - Freq_Hip_hop: how frequently the interviewee listens to hip hop music\\
+        - Freq_Jazz: how frequently the interviewee listens to jazz music\\
+        - Freq_K_pop: how frequently the interviewee listens to k-pop music\\
+        - Freq_Latin: how frequently the interviewee listens to latin music\\
+        - Freq_Lofi: how frequently the interviewee listens to lofi music\\
+        - Freq_Metal: how frequently the interviewee listens to metal music\\
+        - Freq_Pop: how frequently the interviewee listens to pop music\\
+        - Freq_R&B: how frequently the interviewee listens to R&B music\\
+        - Freq_Rap: how frequently the interviewee listens to rap music\\
+        - Freq_Rock: how frequently the interviewee listens to rock music\\
+        - Freq_Video_game_music: how frequently the interviewee listens to video game music\\
         - Anxiety: self-reported anxiety, on a scale of 0-10\\
         - Depression: self-reported depression, on a scale of 0-10\\
         - Insomnia: self-reported insomnia, on a scale of 0-10\\
         - OCD: self-reported OCD, on a scale of 0-10\\
-        - Music_effects: does music improve/worsen the person's mental health conditions?\\
+        - Music_effects: does music improve/worsen the person's mental health conditions? (0 = No effect, 1 = Improve, 2 = Worsen)\\
         - Age_group: the age group the individual belongs to, among under 20, 21-40, 41-60 and over 60""")
 st.write(music_health_df.describe())
 
@@ -126,7 +131,7 @@ st.write("""I studied the correlation between the pairs of columns of the datase
 The plot of a heatmap allowed me to understand that the correlation of the columns was generally low. This result proves that the pairs
 have not a strong linear correlation. However, I decided to search for the maximum negative and positive values, in order to find the 
 most correlated columns.""")
-corr_matrix = music_health_df.drop("Fav_genre", axis = 1).corr()
+corr_matrix = music_health_df.drop(["Fav_genre", "Age_group"], axis = 1).corr()
 fig, ax = plt.subplots()
 sns.heatmap(corr_matrix, cmap = sns.color_palette("mako", as_cmap=True))
 st.write(fig)
@@ -140,10 +145,10 @@ col1.caption("Strongest positive correlation")
 col1.write(sorted_corr_sequence[-29:-28])
 col2.caption("Strongest negative correlation")
 col2.write(sorted_corr_sequence[0:1])
-st.write("""The strongest positive correlation is between the columns Anxiety and Depression, registering a value around 0.5209.
-This reflects the idea that anxiety and depression are in a sense positively and linearly correlated, with an increase in the second if the 
-first increases, and viceversa. On the other hand, the strongest negative correlation can be detected between the columns Hours_per_day and While_working, 
-assuming a value around -0.2879. This value is too small to say that these two columns have a similare behaviour.""")
+st.write("""The strongest positive correlation is between the columns Freq_Hip_hop and Freq_Rap, registering a value around 0.7823.
+This reflects the idea that the frequences of listening to Hip hop and Rap are in a sense positively and linearly correlated: people that 
+listen to hip hop tend to listen also to rap, and viceversa. On the other hand, the strongest negative correlation can be detected between the columns 
+Age and Freq_Video_game_music, assuming a value around -0.2676. This value is too small to say that these two columns have a similar behaviour.""")
 
 #section with plots and models
 st.header("Deeper analysis with Plots and Models")
@@ -201,7 +206,7 @@ The charts corresponding to the labels Rarely and Sometimes are more or less bal
 
 st.subheader("Anxiety, Depression, Insomnia and OCD")
 st.write("""I thought it could be interesting to analyze the attributes relative to Anxiety, Depression, Insomnia and OCD. My idea was to
-show the frequence of the levels of these attributes, with a differentiation according to the effects of music on the patients. For this 
+show the frequence of the levels of these attributes, with a differentiation according to the effects of music on the selected individuals. For this 
 purpose, the histogram was the better solution. So, I created 4 plots, one for each characteristic of mental health.""")
 
 sns.set(style="darkgrid")
@@ -224,24 +229,25 @@ for i in range(0,2):
             axs[i,j-2].legend()
 st.pyplot(fig)
 
-st.write("""From the graph, we can understand that the majority of people who registered a positive effect due to music have high levels of anxiety and depression,
-but low levels of insomnia and OCD. \\Focusing on the worsen effect, it can be said that the graphs don't help in any further analysis because the
+st.write("""From the graphs, we can understand that the majority of people who registered a positive effect due to music have high levels of anxiety and depression,
+but low levels of insomnia and OCD.""")
+st.write("""Focusing on the worsen effect, it can be said that the graphs don't help in any further analysis because the
 bars of the relative histograms are very low. That is due to the fact that we have information about only 17 individuals with a value "worsen" in the music effects column.
-For this category, the only not irrelevant bar is the one related to a level of depression equal to 10, that reaches a frequence around 8 for the people who had a worsen effect. 
-\\Finally, we can focus on the individuals who had no effect due to listening to music. They generally tend to have low levels of insomnia and even more of OCD. Their level of 
+For this category, the only not irrelevant bar is the one related to a level of depression equal to 10, that reaches a frequence around 8 for the people who had a worsen effect.""")
+st.write("""Finally, we can focus on the individuals who had no effect due to listening to music. They generally tend to have low levels of insomnia and even more of OCD. Their level of 
 anxiety seems to have no particular influence on the music effect results, because the Aqua colored bars in the first histogram are more or less equally high. Their level of 
 depression fluctuates a lot, but the highest frequences are registered at both very low and very high levels.""")
 
-st.write("""In accordance with what I found in the correlation analysis, the above histograms show that anxiety and depression seem to have a similar 
-behaviour, in particular around the highest levels. For this reason, I wanted to further the relationship between these two attributes, that are also 
-the couple with the highest level of positive correlation. I represented them through 4 scatter plots, one for each age group.""")
+st.write("""The above histograms show that anxiety and depression seem to have a similar behaviour, in particular around the highest levels. For this reason, I wanted to further the relationship 
+between these two attributes, whose level of correlation is: """, corr_matrix.loc["Anxiety"]["Depression"], ".")
+st.write("""I represented them through 4 scatter plots, one for each age group.""")
 fig, ax = plt.subplots(2, 2)
 fig = sns.relplot(data = music_health_df, x="Anxiety", y="Depression", hue = "Age_group", col = "Age_group", kind="scatter", 
 col_wrap = 2, palette = ["g", "r", "orange", "blue"], marker = "X")
 st.pyplot(fig)
 st.write("""As you can see, the plots corresponding to the youngest groups (under 20 and 21-40) are very confused, and points are represented without
 an explicable pattern. Therefore, these groups are the ones that are responsible for a reduction in the correlation between the two attributes. 
-\\On the contrary, the other two groups seem to express a higher level of correlation between anxiety and depression, in particular for the over 
+On the contrary, the other two groups seem to express a higher level of correlation between anxiety and depression, in particular for the over 
 60 patients (it seems that we can approximate the points with a straight line).""")
 
 #further study of the relationship beween anxiety and depression
@@ -272,7 +278,7 @@ plt.plot(line, c = "Magenta", label = "Model")
 plt.legend()
 st.pyplot(fig)
 
-st.write("Where the slope is", model.coef_[0], "and the intercept is", model.intercept_[0], ".")
+st.write("Where the slope of the straight line is", model.coef_[0][0], "and the intercept is", model.intercept_[0], ".")
 st.write("The mean squared error is: ", metrics.mean_squared_error(y_pred, y_test))
 
 st.write("""Since the mean squared error is relatively low, we can conclude this analysis by saying that anxiety and depression in over 60 
@@ -280,7 +286,7 @@ individuals are somehow correlated, having almost a linear relationship. For thi
 simultaneously and with correlated levels in older people.""")
 
 st.subheader("Age and Hours per day - Clustering")
-st.write("""I wanted to deepen study the relationship between Age and Hours per day of music listened, in order to understand if there is 
+st.write("""I wanted to study the relationship between Age and Hours per day of music listened, in order to understand if there is 
 a correlation between these two attributes. I expected to find some result, because I believe that the hours of music listened per day 
 somehow depends on the age on the individual. The following graph represents the behaviour of these two attributes in the available data.""")
 #plot of age and hours per day of music listened
@@ -304,7 +310,7 @@ for i in range(1,11):
 
 fig, axs = plt.subplots() #plot the relationship between the number of clusters and the correspondent value of inertia
 plt.plot(range(1,11), square_distances, "rx-")
-plt.xlabel("K")
+plt.xlabel("Number of clusters")
 plt.ylabel("Inertia")
 plt.title("Inertia per number of clusters")
 plt.xticks(list(range(1,11)))
@@ -369,7 +375,7 @@ for random_state in [1, 23, 42, 15, 56]:
     y_pred = model.predict(x_test)
     accuracies.append(accuracy_score(y_pred, y_test))
 st.table(accuracies)
-st.write("""It is evident that the third one has the highest accuracy. For this reason, this is the one I selected and used for the prediction 
+st.write("""It is evident that the one indicated by the value 2 has the highest accuracy. For this reason, this is the one I selected and used for the prediction 
 (the correspondent random state was 42). This value of accuracy tells me that the prediction the model is exact in around 80% of the cases.\\
 Here is the prediction of the music effects (where 0 = no effect, 1 = improve, 2 = worsen):""")
 
@@ -384,7 +390,7 @@ while only a few of them have a predicted no effect, as we can see from the foll
 st.table(np.unique(y_pred, return_counts = True)) #how many values are predicted for each label?
 
 st.subheader("Principal Component Analysis")
-st.write("""The aim of this section is to reduce the dimensions of my dataset, in order to dicover if it is possible to better understand and 
+st.write("""The aim of this section is to reduce the dimensions of my dataset, in order to discover if it is possible to better understand and 
 explain the behaviour of the Music effects columns, that is the target of this analysis. \\
 First of all, I normalized the dataset (considering only the numerical columns):""")
 x = music_health_df.drop(["Music_effects", "Fav_genre", "Age_group"], axis=1) #drop the not numerical columns and the target column
@@ -415,8 +421,8 @@ plt.ylabel("Cumulative Explained Variance")
 plt.xticks(list(range(1, 21)))
 st.pyplot(fig)
 st.write("""It is evident that each component gives a very low contribution to the cumulative explained variance. So, it is necessary 
-to select a relative high number of principal component to describe the data. For example, by selecting 14 components, we can obtain 
-a good level of cumulative explained variance: 70%."""
+to select a relative high number of principal component to describe the data. For example, by selecting 12 components, we can obtain 
+a good level of cumulative explained variance: just above 70%.""")
 st.write("""I wanted to analyze the situation obtained by selecting only 2 components, in order to make it possible to represents the data in a two dimensional plot:""")
 #what happens with only two components
 n_components = 2
@@ -439,15 +445,15 @@ plt.legend()
 st.pyplot(fig)
 
 st.write("""We can immediatly notice that the three clusters, corresponding to the labels of music effects, overlap in the plot, making
-the graph very confused. As I found before, two components explain only about 18% of the variance. This is a very low level, that do not 
+the graph very confused. As I found before, two components explain only about 23% of the variance. This is a very low level, that do not 
 allow to create separated clusters according to the music effect. For this reason, it is necessary to increase the number of Principal 
 Components needed to represent the data. The problem with an increase in dimension is that then it is not possible to visually represent the
-data in a plot. However, selecting for example 14 principal components is a good solution, allowing to reduce the dimensions of the dataset 
-of 12 units.""")
+data in a plot. However, selecting for example 12 principal components is a good solution, allowing to reduce the dimensions of the dataset 
+of 14 units (as the dataset with only numerical columns has 26 columns).""")
 
 st.subheader("Groupby")
-st.write("""I firstly created a subset of my dataset, keeping only the columns I was interested in. Then, I decided to use the groupby function 
-in order to group the dataset according to music effects, and apply the mean. The result is the following dataset:""")
+st.write("""In this step, I created a subset of my dataset, keeping only the columns I was interested in (the ones that I've not analyzed yet). 
+Then, I decided to use the groupby function in order to group the dataset according to music effects, and apply the mean. The result is the following dataset:""")
 new_dataset = music_health_df.copy()
 #creation of a subset of the dataset, with only the columns I'm interested in
 new_dataset.drop(music_health_df.columns[7:27], axis = 1, inplace = True)
@@ -457,7 +463,7 @@ data_groupby_effects_mean  = new_dataset.groupby(["Music_effects"]).mean() #grou
 data_groupby_effects_mean["Music_effects"] = [0, 1, 2]
 st.write(data_groupby_effects_mean)
 
-st.write("""The values in the columns While_working, Instrumentalist, Composer, Exploratory represent the percentage of patients that 
+st.write("""The values in the columns While_working, Instrumentalist, Composer, Exploratory represent the percentage of individuals that 
 answered positively to the question relative to the corresponsing action (that is because I set the values of the columns equal to 1 
 if the answer was Yes and 0 if the answer was no). \\
 My idea was to create a set of bar charts to represent the relationship between music effects and the mean of the selected columns. The 
